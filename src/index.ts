@@ -1,4 +1,12 @@
 import axios from 'axios';
+import promiseRetry from 'promise-retry';
+
+export const retryExecFactory = async (func, retries = 3):Promise<any> => {
+  return promiseRetry((retry, number) => {
+    return func()
+      .catch(retry);
+  }, { retries });
+};
 
 const CHAIN_GAS_STATION_V1 = {
   1: 'https://api.anyblock.tools/ethereum/ethereum/mainnet/gasprice',
@@ -28,6 +36,6 @@ export const fetchGasStation = async (chainId: string | number):Promise<GAS_STAT
   if (!url) {
     throw new Error(`this chain is not handle ${chainId}`);
   }
-  const b = await axios.get(url);
+  const b = await retryExecFactory(axios.get(url));
   return b.data;
 };
