@@ -1,5 +1,6 @@
 import axios from 'axios';
 import promiseRetry from 'promise-retry';
+import BigNumber from 'bignumber.js';
 
 export const retryExecFactory = async (func, retries = 3):Promise<any> => {
   return promiseRetry((retry, number) => {
@@ -8,18 +9,29 @@ export const retryExecFactory = async (func, retries = 3):Promise<any> => {
   }, { retries });
 };
 
-const CHAIN_GAS_STATION_V1 = {
-  1: 'https://api.anyblock.tools/ethereum/ethereum/mainnet/gasprice',
-  80001: 'https://gasstation-mainnet.matic.network',
-  137: 'https://gasstation-mainnet.matic.network/V1',
-  77: 'https://cert.arianee.org/gasStation/testnet.json',
-  99: 'https://cert.arianee.org/gasStation/mainnet.json'
-};
-const CHAIN_GAS_STATION_V2 = {
-  80001: 'https://gasstation-mainnet.matic.network/V2',
-  137: 'https://gasstation-mainnet.matic.network/v2',
-  77: 'https://cert.arianee.org/gasStation/V2/testnet.json',
-  99: 'https://cert.arianee.org/gasStation/V2/mainnet.json'
+export const CHAIN_GAS_STATION_V1 = {
+  1: {
+    url: 'https://ethgasstation.info/api/ethgasAPI.json?',
+    modifiers: [(data) => ({
+      blockNumber: data.blockNum,
+      standard: new BigNumber(data.average).div(10).toNumber(),
+      safeLow: new BigNumber(data.safeLow).div(10).toNumber(),
+      fast: new BigNumber(data.fast).div(10).toNumber(),
+      fastest: new BigNumber(data.fastest).div(10).toNumber()
+    })]
+  },
+  80001: {
+    url: 'https://gasstation-mainnet.matic.network'
+  },
+  137: {
+    url: 'https://gasstation-mainnet.matic.network/V1'
+  },
+  77: {
+    url: 'https://cert.arianee.org/gasStation/testnet.json'
+  },
+  99: {
+    url: 'https://cert.arianee.org/gasStation/mainnet.json'
+  }
 };
 
 export interface GAS_STATION {
@@ -32,10 +44,20 @@ export interface GAS_STATION {
 }
 
 export const fetchGasStation = async (chainId: string | number):Promise<GAS_STATION> => {
-  const url = CHAIN_GAS_STATION_V1[chainId.toString()];
-  if (!url) {
+  const obj = CHAIN_GAS_STATION_V1[chainId.toString()];
+  if (!obj) {
     throw new Error(`this chain is not handle ${chainId}`);
   }
-  const b = await retryExecFactory(() => axios.get(url));
-  return b.data;
+  const { url, modifiers } = obj;
+  const response = await retryExecFactory(() => axios.get(url));
+  const { data } = response;
+  let modifiedData = data;
+
+  if (modifiers) {
+    for (var modifier of modifiers) {
+      modifiedData = modifier(modifiedData);
+    }
+  }
+
+  return modifiedData;
 };
