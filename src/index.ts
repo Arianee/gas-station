@@ -36,6 +36,6 @@ export const fetchGasStation = async (chainId: string | number):Promise<GAS_STAT
   if (!url) {
     throw new Error(`this chain is not handle ${chainId}`);
   }
-  const b = await retryExecFactory(axios.get(url));
+  const b = await retryExecFactory(() => axios.get(url));
   return b.data;
 };
