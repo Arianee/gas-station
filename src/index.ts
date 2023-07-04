@@ -21,16 +21,16 @@ export const CHAIN_GAS_STATION_V1 = {
     })]
   },
   80001: {
-    url: 'https://gasstation-mainnet.matic.network'
+    url: 'https://gasstation.arianee.com/80001'
   },
   137: {
-    url: 'https://gasstation-mainnet.matic.network/V1'
+    url: 'https://gasstation.arianee.com/137'
   },
   77: {
-    url: 'https://cert.arianee.org/gasStation/testnet.json'
+    url: 'https://gasstation.arianee.com/77'
   },
   99: {
-    url: 'https://cert.arianee.org/gasStation/mainnet.json'
+    url: 'https://gasstation.arianee.com/99'
   }
 };
 
